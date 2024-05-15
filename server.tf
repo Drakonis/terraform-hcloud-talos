@@ -47,6 +47,17 @@ locals {
       ipv4_private       = local.worker_private_ipv4_list[i]
     }
   ]
+  disk_config = <<EOT
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+provisioning:
+  diskSelector:
+    match: disk.transport == 'virtio'
+  minSize: 50GB
+  maxSize: 50GB
+  grow: false
+EOT
 }
 
 resource "tls_private_key" "ssh_key" {
@@ -113,7 +124,7 @@ resource "hcloud_server" "workers" {
   name               = each.value.name
   image              = local.worker_image_id
   server_type        = var.worker_server_type
-  user_data          = data.talos_machine_configuration.worker[each.value.name].machine_configuration
+  user_data          = join("---\n", [data.talos_machine_configuration.worker[each.value.name].machine_configuration, local.disk_config])
   ssh_keys           = [hcloud_ssh_key.this.id]
   placement_group_id = hcloud_placement_group.worker.id
 

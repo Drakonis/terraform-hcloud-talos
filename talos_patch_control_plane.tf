@@ -22,6 +22,9 @@ locals {
             "ipv6.disable=${var.enable_ipv6 ? 0 : 1}",
           ]
         }
+        nodeLabels = {
+          "node.kubernetes.io/exclude-from-external-load-balancers"="true"
+        }
         certSANs = local.cert_SANs
         kubelet = {
           extraArgs = merge(
